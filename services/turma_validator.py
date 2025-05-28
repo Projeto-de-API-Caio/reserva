@@ -13,9 +13,4 @@ def validar_turma(turma_id):
     except Exception:
         return False
 
-def validar_aluno(aluno_id):
-    try:
-        response = requests.get(f"{ESCOLA_API_URL}/alunos/{aluno_id}")
-        return response.status_code == 200
-    except Exception:
-        return False
+
