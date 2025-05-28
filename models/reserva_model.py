@@ -43,7 +43,7 @@ def criar_reserva(dados):
         turma_id=dados['turma_id'],
         sala=dados['sala'],
         data=datetime.fromisoformat(dados['data']).date(),
-        hora_inicio=dados['hora_inicio'],
+        hora_inicio=dados['hora_inicio']
         hora_fim=dados['hora_fim']
 
         reserva = Reserva(turma_id, sala, data, hora_inicio, hora_fim)
@@ -62,3 +62,7 @@ def excluir_reserva(id_reserva):
         raise ReservaNotFound()
     db.session.delete(reserva)
     db.session.commit()
+
+def listar_reservas():
+    reservas = Reserva.query.all()
+    return [reserva.to_dict() for reserva in reservas], 200
