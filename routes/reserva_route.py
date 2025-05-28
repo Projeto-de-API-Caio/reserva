@@ -1,43 +1,39 @@
-from flask import Blueprint, request, jsonify
-from models.reserva_model import Reserva
-from database import db
-from services.validador_escola import validar_turma, validar_aluno
-from sqlalchemy import and_
+from flask import Blueprint, jsonify, request
+from models import reserva_model
+from services.turma_validator import validar_turma
 
-routes = Blueprint("routes", __name__)
 
-@routes.route("/reservas", methods=["POST"])
+reserva_bp = Blueprint('reserva_bp', __name__)
+
+
+@reserva_bp.route('/', methods=['GET'])
+def listar_reservas():
+    reservas = reserva_model.listar_reservas()
+    return jsonify(reservas), 200
+
+
+@reserva_bp.route('/', methods=['POST'])
 def criar_reserva():
     dados = request.json
-    campos = ["turma_id", "aluno_id", "sala", "data", "hora_inicio", "hora_fim"]
-    for campo in campos:
-        if not dados.get(campo):
-            return jsonify({"erro": f"Campo '{campo}' é obrigatório"}), 400
-
-    if not validar_turma(dados["turma_id"]):
+    
+    if not validar_turma(dados.get('turma_id')):
         return jsonify({"erro": "Turma não encontrada"}), 400
 
-    if not validar_aluno(dados["aluno_id"]):
-        return jsonify({"erro": "Aluno não encontrado"}), 400
+    reserva, status = reserva_model.criar_reserva(dados)
+    return jsonify(reserva), status
 
-    conflito = Reserva.query.filter_by(
-        sala=dados["sala"],
-        data=dados["data"]
-    ).filter(
-        and_(
-            Reserva.hora_inicio < dados["hora_fim"],
-            Reserva.hora_fim > dados["hora_inicio"]
-        )
-    ).first()
-
-    if conflito:
-        return jsonify({"erro": "Conflito de horário para esta sala"}), 409
-
+@reserva_bp.route('/<int:id_reserva>', methods=['GET'])
+def obter_reserva(id_reserva):
     try:
-        reserva = Reserva(**dados)
-        db.session.add(reserva)
-        db.session.commit()
-        return jsonify({"mensagem": "Reserva criada com sucesso"}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"erro": str(e)}), 500
+        reserva = reserva_model.obter_reserva(id_reserva)
+        return jsonify(reserva), 200
+    except reserva_model.ReservaNotFound:
+        return jsonify({'erro': 'Reserva não encontrada'}), 404
+
+@reserva_bp.route('/<int:id_reserva>', methods=['DELETE'])
+def excluir_reserva(id_reserva):
+    try:
+        reserva_model.excluir_reserva(id_reserva)
+        return jsonify({"mensagem": "Reserva excluída com sucesso"}), 200
+    except reserva_model.ReservaNotFound:
+        return jsonify({'erro': 'Reserva não encontrada'}), 404

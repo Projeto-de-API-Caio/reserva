@@ -1,21 +1,21 @@
-import os
 import requests
+from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = os.getenv("ESCOLA_API_URL", "http://localhost:5000")
+ESCOLA_API_URL = getenv("ESCOLA_API_URL", "http://127.0.0.1:8000")
 
 def validar_turma(turma_id):
     try:
-        resp = requests.get(f"{BASE_URL}/api/turmas/{turma_id}")
-        return resp.status_code == 200
-    except requests.exceptions.RequestException:
+        response = requests.get(f"{ESCOLA_API_URL}/turmas/{turma_id}")
+        return response.status_code == 200
+    except Exception:
         return False
 
 def validar_aluno(aluno_id):
     try:
-        resp = requests.get(f"{BASE_URL}/api/alunos/{aluno_id}")
-        return resp.status_code == 200
-    except requests.exceptions.RequestException:
+        response = requests.get(f"{ESCOLA_API_URL}/alunos/{aluno_id}")
+        return response.status_code == 200
+    except Exception:
         return False
